@@ -1,15 +1,15 @@
 #!/bin/bash
 
-echo "=> Creating database playSMS in MySQL"
-/create_db.sh playsms
+# echo "=> Creating database playSMS in MySQL"
+# /create_db.sh playsms
 
-/usr/bin/mysqld_safe >/dev/null 2>&1 &
+# /usr/bin/mysqld_safe >/dev/null 2>&1 &
 
 RET=1
 while [[ RET -ne 0 ]]; do
     echo "=> Waiting for confirmation of MySQL service startup"
     sleep 5
-    mysql -uroot -e "status" > /dev/null 2>&1
+    mysql -u$MYSQL_USERNAME -p$MYSQL_PASSWORD -h$MYSQL_HOST -P$MYSQL_PORT -e "status" > /dev/null 2>&1
     RET=$?
 done
 
@@ -53,11 +53,11 @@ fi
 echo "INSTALL DATA:"
 echo
 
-echo "MySQL username      = $DBUSER"
-echo "MySQL password      = $DBPASS"
-echo "MySQL database      = $DBNAME"
-echo "MySQL host          = $DBHOST"
-echo "MySQL port          = $DBPORT"
+echo "MySQL username      = $MYSQL_USERNAME"
+echo "MySQL password      = $MYSQL_PASSWORD"
+echo "MySQL database      = $MYSQL_DATABASE"
+echo "MySQL host          = $MYSQL_HOST"
+echo "MySQL port          = $MYSQL_PORT"
 echo
 echo "Web server user     = $WEBSERVERUSER"
 echo "Web server group    = $WEBSERVERGROUP"
@@ -129,23 +129,26 @@ echo -n .
 cp -rR web/* $PATHWEB
 set +e
 #echo -n .
-#mysqladmin -u $DBUSER -p$DBPASS -h $DBHOST -P $DBPORT create $DBNAME >/dev/null 2>&1
+#mysqladmin -u $MYSQL_USERNAME -p$DBPASS -h $DBHOST -P $DBPORT create $DBNAME >/dev/null 2>&1
 #set -e
 echo -n .
 #mysql -u $DBUSER -p$DBPASS -h $DBHOST -P $DBPORT $DBNAME < db/playsms.sql
-mysql -uroot playsms < db/playsms.sql
-echo -n .
+# if [[ -d /tmp/.db_user_created ]]; then
+	
+# 	rm /tmp/.db_user_created
+# fi
+# echo -n .
 cp $PATHWEB/config-dist.php $PATHWEB/config.php
 echo -n .
-sed -i "s/#DBHOST#/$DBHOST/g" $PATHWEB/config.php
+sed -i "s/#DBHOST#/$MYSQL_HOST/g" $PATHWEB/config.php
 echo -n .
-sed -i "s/#DBPORT#/$DBPORT/g" $PATHWEB/config.php
+sed -i "s/#DBPORT#/$MYSQL_PORT/g" $PATHWEB/config.php
 echo -n .
-sed -i "s/#DBNAME#/$DBNAME/g" $PATHWEB/config.php
+sed -i "s/#DBNAME#/$MYSQL_DATABASE/g" $PATHWEB/config.php
 echo -n .
-sed -i "s/#DBUSER#/$DBUSER/g" $PATHWEB/config.php
+sed -i "s/#DBUSER#/$MYSQL_USERNAME/g" $PATHWEB/config.php
 echo -n .
-sed -i "s/#DBPASS#/$DBPASS/g" $PATHWEB/config.php
+sed -i "s/#DBPASS#/$MYSQL_PASSWORD/g" $PATHWEB/config.php
 echo -n .
 sed -i "s|#PATHLOG#|$PATHLOG|g" $PATHWEB/config.php
 echo -n .
@@ -191,7 +194,5 @@ echo
 echo "1. Possibly theres an issue with composer updates, try to run: \"composer update\""
 echo "2. Manually run playsmsd, eg: \"playsmsd start\", and then \"playsmsd status\""
 echo
-
-mysqladmin -uroot shutdown
 
 exit 0
